@@ -43,6 +43,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 
+import org.apache.log4j.Logger;
 import org.bitrepository.common.utils.Base16Utils;
 
 import dk.magenta.bitmagasinet.checksum.ChecksumIOHandler;
@@ -66,13 +67,12 @@ import dk.magenta.bitmagasinet.process.ProcessHandlerObserver;
 import dk.magenta.bitmagasinet.remote.BitrepositoryConnectionResult;
 import dk.magenta.bitmagasinet.remote.BitrepositoryConnector;
 import dk.magenta.bitmagasinet.remote.BitrepositoryConnectorImpl;
-import dk.magenta.bitmagasinet.remote.BitrepositoryConnectorRandomResultStub;
-import dk.magenta.bitmagasinet.remote.ThreadStatus;
 import dk.magenta.bitmagasinet.remote.ThreadStatusObserver;
 
 public class Main extends JFrame implements ThreadStatusObserver, ProcessHandlerObserver {
 
 	private static final long serialVersionUID = 1719991083148859676L;
+	private static final Logger logger = Logger.getLogger(Main.class);
 
 	private JPanel contentPane;
 	private JButton btnGetConfiguration;
@@ -135,6 +135,8 @@ public class Main extends JFrame implements ThreadStatusObserver, ProcessHandler
 	 * Create the main frame.
 	 */
 	public Main() {
+		
+		logger.info("Application started");
 		
 		configurationHandler = new ConfigurationHandlerImpl();
 		configurationIOHandler = new ConfigurationIOHandlerImpl(configurationHandler);
@@ -437,6 +439,8 @@ public class Main extends JFrame implements ThreadStatusObserver, ProcessHandler
 		btnGetChecksums.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				
+				logger.info("Start retreiving checksums...");
+				
 				// Disable/hide buttons
 				progressBar.setValue(0);
 				sortDropDown.setEnabled(false);
@@ -450,11 +454,14 @@ public class Main extends JFrame implements ThreadStatusObserver, ProcessHandler
 				File checksumFile = new File(txtPathToLocalChecksumList.getText().trim());
 				try {
 					fileChecksums = checksumIOHandler.readChecksumList(checksumFile);
+					logger.info("Checksum list loaded and parsed");
 				} catch (IOException e) {
 					JOptionPane.showMessageDialog(contentPane, "Der opstod en fejl under læsning af filen " + txtPathToLocalChecksumList.getText());
+					logger.error("Error reading checksum list", e);
 					e.printStackTrace();
 				} catch (InvalidChecksumFileException e) {
 					JOptionPane.showMessageDialog(contentPane, e.getMessage());
+					logger.error("Error reading checksum list", e);
 					e.printStackTrace();
 				}
 				
@@ -469,6 +476,7 @@ public class Main extends JFrame implements ThreadStatusObserver, ProcessHandler
 				bitrepositoryConnector.addObserver(processHandler);
 				bitrepositoryConnector.addObserver(Main.this);
 				
+				logger.info("Start processing checksums");
 				processHandler.addObserver(Main.this);
 				processHandler.processNext();
 				
